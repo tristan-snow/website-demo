@@ -29,43 +29,60 @@
 
     const ctx = document.getElementById('myChart').getContext('2d');
 
-    const chart = new Chart(ctx, {
-      type: 'scatter',
-      data: {
-        datasets: [{
-          label: 'Data Points',
-          data: dataPoints.map(point => ({ x: point.x, y: point.y })),
-          backgroundColor: 'rgba(75, 192, 192, 1)',
-          pointRadius: 5
-        }]
-      },
-      options: {
-        responsive: true,
-        plugins: {
-          tooltip: {
-            callbacks: {
-              label: context => {
-                const pointIndex = context.dataIndex;
-                return `Point (${context.raw.x}, ${context.raw.y})`;
-              }
+  const chart = new Chart(ctx, {
+    type: 'scatter',
+    data: {
+      datasets: [{
+        label: 'Data Points',
+        data: dataPoints.map(point => ({ x: point.x, y: point.y })),
+        backgroundColor: 'rgba(75, 192, 192, 1)',
+        pointRadius: 5
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        tooltip: {
+          callbacks: {
+            label: context => {
+              const pointIndex = context.dataIndex;
+              return `Point (${context.raw.x}, ${context.raw.y})`;
             }
           }
-        },
-        onClick: (event) => {
-          const points = chart.getElementsAtEventForMode(event, 'nearest', { intersect: true }, false);
-          if (points.length) {
-            const pointIndex = points[0].index;
-            const clickedPoint = dataPoints[pointIndex];
-            alert(`Image related to this point: ${clickedPoint.imageUrl}`);
-          }
-        },
-        scales: {
-          x: { title: { display: true, text: 'X Axis' } },
-          y: { title: { display: true, text: 'Y Axis' } }
         }
+      },
+      onClick: (event) => {
+        const points = chart.getElementsAtEventForMode(event, 'nearest', { intersect: true }, false);
+        if (points.length) {
+          const pointIndex = points[0].index;
+          const clickedPoint = dataPoints[pointIndex];
+          alert(`Image related to this point: ${clickedPoint.imageUrl}`);
+        }
+      },
+      scales: {
+        x: { title: { display: true, text: 'X Axis' } },
+        y: { title: { display: true, text: 'Y Axis' } }
       }
-    });
-  </script>
+    }
+  });
+
+  // Insert the image display logic here
+  const imageDisplay = document.createElement("img");
+  imageDisplay.style.maxWidth = "80%";
+  imageDisplay.style.display = "block";
+  imageDisplay.style.margin = "20px auto";
+  document.body.appendChild(imageDisplay);
+
+  chart.options.onClick = (event) => {
+    const points = chart.getElementsAtEventForMode(event, 'nearest', { intersect: true }, false);
+    if (points.length) {
+      const pointIndex = points[0].index;
+      const clickedPoint = dataPoints[pointIndex];
+      imageDisplay.src = clickedPoint.imageUrl;
+      imageDisplay.alt = `Image for data point (${clickedPoint.x}, ${clickedPoint.y})`;
+    }
+  };
+</script>
 
 </body>
 </html>

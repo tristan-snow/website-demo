@@ -26,86 +26,102 @@
 <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
 
 <script>
-  fetch("feedback_data.csv")
-    .then(response => response.text())
-    .then(csvText => {
-      const parsedData = Papa.parse(csvText, {
-        header: true,
-        skipEmptyLines: true
-      });
-
-      const dataPoints = parsedData.data.map(row => ({
-        x: new Date(row.x),  // Parse full date-time
-        y: parseFloat(row.y),
-        imageUrl: `images/${row.imageUrl}`
-      }));
-
-      renderGraph(dataPoints);
+fetch("feedback_data.csv")
+  .then(response => response.text())
+  .then(csvText => {
+    const parsedData = Papa.parse(csvText, {
+      header: true,
+      skipEmptyLines: true,
+      delimiter: '\t'  // Assuming tab-separated values
     });
 
-  function renderGraph(dataPoints) {
-    const ctx = document.getElementById('myChart').getContext('2d');
+    const dataPoints = parsedData.data.map(row => ({
+      x: new Date(row.x),
+      y: parseFloat(row.y),
+      imageUrl: `images/${row.imageUrl}`
+    }));
 
-    const chart = new Chart(ctx, {
-      type: 'scatter',
-      data: {
-        datasets: [{
-          label: 'Data Points',
-          data: dataPoints,
-          backgroundColor: 'rgba(75, 192, 192, 1)',
-          pointRadius: 5
-        }]
-      },
-      options: {
-        responsive: true,
-        plugins: {
-          tooltip: {
-            callbacks: {
-              label: context => {
-                const date = new Date(context.raw.x);
-                return `Date: ${date.toLocaleString()}, Value: ${context.raw.y}`;
-              }
+    // Calculate the min and max dates with padding
+    const dates = dataPoints.map(point => point.x);
+    const minDate = new Date(Math.min(...dates));
+    const maxDate = new Date(Math.max(...dates));
+
+    // Add padding of a day before/after the first and last dates
+    minDate.setDate(minDate.getDate() - 1);
+    maxDate.setDate(maxDate.getDate() + 1);
+
+    renderGraph(dataPoints, minDate, maxDate);
+  });
+
+function renderGraph(dataPoints, minDate, maxDate) {
+  const ctx = document.getElementById('myChart').getContext('2d');
+
+  const chart = new Chart(ctx, {
+    type: 'scatter',
+    data: {
+      datasets: [{
+        label: 'Data Points',
+        data: dataPoints,
+        backgroundColor: 'rgba(75, 192, 192, 1)',
+        pointRadius: 5
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        tooltip: {
+          callbacks: {
+            label: context => {
+              const date = new Date(context.raw.x);
+              return `Date: ${date.toLocaleString()}, Value: ${context.raw.y}`;
             }
-          }
-        },
-        onClick: (event) => {
-          const points = chart.getElementsAtEventForMode(event, 'nearest', { intersect: true }, false);
-          if (points.length) {
-            const pointIndex = points[0].index;
-            const clickedPoint = dataPoints[pointIndex];
-            displayImage(clickedPoint.imageUrl);
-          }
-        },
-        scales: {
-          x: {
-            type: 'time',
-            title: { display: true, text: 'Date and Time' },
-            time: {
-              unit: 'hour',
-              displayFormats: {
-                hour: 'MMM d, yyyy HH:mm'
-              }
-            }
-          },
-          y: {
-            title: { display: true, text: 'Y Axis' }
           }
         }
+      },
+      onClick: (event) => {
+        const points = chart.getElementsAtEventForMode(event, 'nearest', { intersect: true }, false);
+        if (points.length) {
+          const pointIndex = points[0].index;
+          const clickedPoint = dataPoints[pointIndex];
+          displayImage(clickedPoint.imageUrl);
+        }
+      },
+      scales: {
+        x: {
+          type: 'time',
+          title: { display: true, text: 'Date and Time' },
+          min: minDate,
+          max: maxDate,
+          time: {
+            unit: 'day',
+            displayFormats: {
+              day: 'MMM d, yyyy HH:mm'
+            }
+          },
+          ticks: {
+            source: 'auto',
+            autoSkip: false
+          }
+        },
+        y: {
+          title: { display: true, text: 'Y Axis' }
+        }
       }
-    });
-
-    function displayImage(imageUrl) {
-      let imageDisplay = document.getElementById("image-display");
-      if (!imageDisplay) {
-        imageDisplay = document.createElement("img");
-        imageDisplay.id = "image-display";
-        imageDisplay.style.maxWidth = "80%";
-        imageDisplay.style.display = "block";
-        imageDisplay.style.margin = "20px auto";
-        document.body.appendChild(imageDisplay);
-      }
-      imageDisplay.src = imageUrl;
-      imageDisplay.alt = `Related Image`;
     }
+  });
+
+  function displayImage(imageUrl) {
+    let imageDisplay = document.getElementById("image-display");
+    if (!imageDisplay) {
+      imageDisplay = document.createElement("img");
+      imageDisplay.id = "image-display";
+      imageDisplay.style.maxWidth = "80%";
+      imageDisplay.style.display = "block";
+      imageDisplay.style.margin = "20px auto";
+      document.body.appendChild(imageDisplay);
+    }
+    imageDisplay.src = imageUrl;
+    imageDisplay.alt = `Related Image`;
   }
+}
 </script>

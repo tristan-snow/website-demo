@@ -32,25 +32,26 @@ fetch("feedback_data.csv")
     const parsedData = Papa.parse(csvText, {
       header: true,
       skipEmptyLines: true,
-      delimiter: '\t'  // Assuming tab-separated values
+      delimiter: '\t'  // Tab-separated
     });
 
     const dataPoints = parsedData.data.map(row => ({
-      x: new Date(row.x),
+      x: new Date(row.x.trim()),  // Trim spaces and parse full date-time
       y: parseFloat(row.y),
-      imageUrl: `images/${row.imageUrl}`
+      imageUrl: `images/${row.imageUrl.trim()}`
     }));
 
-    // Calculate the min and max dates with padding
-    const dates = dataPoints.map(point => point.x);
-    const minDate = new Date(Math.min(...dates));
-    const maxDate = new Date(Math.max(...dates));
+    // Safely calculate min/max dates if valid points exist
+    if (dataPoints.length) {
+      const dates = dataPoints.map(point => point.x);
+      const minDate = new Date(Math.min(...dates));
+      const maxDate = new Date(Math.max(...dates));
 
-    // Add padding of a day before/after the first and last dates
-    minDate.setDate(minDate.getDate() - 1);
-    maxDate.setDate(maxDate.getDate() + 1);
+      minDate.setDate(minDate.getDate() - 1);
+      maxDate.setDate(maxDate.getDate() + 1);
 
-    renderGraph(dataPoints, minDate, maxDate);
+      renderGraph(dataPoints, minDate, maxDate);
+    }
   });
 
 function renderGraph(dataPoints, minDate, maxDate) {
@@ -93,9 +94,9 @@ function renderGraph(dataPoints, minDate, maxDate) {
           min: minDate,
           max: maxDate,
           time: {
-            unit: 'day',
+            unit: 'hour',
             displayFormats: {
-              day: 'MMM d, yyyy HH:mm'
+              hour: 'MMM d, yyyy HH:mm'
             }
           },
           ticks: {
@@ -124,4 +125,5 @@ function renderGraph(dataPoints, minDate, maxDate) {
     imageDisplay.alt = `Related Image`;
   }
 }
+
 </script>

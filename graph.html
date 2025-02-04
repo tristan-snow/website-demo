@@ -21,64 +21,81 @@
  </body>
 </html>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
+
 <script>
-    const dataPoints = [
-  { x: 1, y: 5, imageUrl: "images/IMG_1039.JPEG" },
-  { x: 2, y: 7, imageUrl: "images/IMG_1031.JPEG" },
-  { x: 3, y: 4, imageUrl: "images/IMG_1032.JPEG" },
-  { x: 4, y: 9, imageUrl: "images/IMG_1033.JPEG" }
-    ];
+  // Load CSV and plot the graph
+  fetch("data.csv")
+    .then(response => response.text())
+    .then(csvText => {
+      // Parse CSV using PapaParse
+      const parsedData = Papa.parse(csvText, {
+        header: true,
+        skipEmptyLines: true
+      });
 
-  const ctx = document.getElementById('myChart').getContext('2d');
+      // Extract points and plot the graph
+      const dataPoints = parsedData.data.map(row => ({
+        x: parseFloat(row.x),
+        y: parseFloat(row.y),
+        imageUrl: `images/${row.imageUrl}`
+      }));
 
-  const chart = new Chart(ctx, {
-    type: 'scatter',
-    data: {
-      datasets: [{
-        label: 'Data Points',
-        data: dataPoints.map(point => ({ x: point.x, y: point.y })),
-        backgroundColor: 'rgba(75, 192, 192, 1)',
-        pointRadius: 5
-      }]
-    },
-    options: {
-      responsive: true,
-      plugins: {
-        tooltip: {
-          callbacks: {
-            label: context => {
-              return `Point (${context.raw.x}, ${context.raw.y})`;
+      renderGraph(dataPoints);
+    });
+
+  function renderGraph(dataPoints) {
+    const ctx = document.getElementById('myChart').getContext('2d');
+
+    const chart = new Chart(ctx, {
+      type: 'scatter',
+      data: {
+        datasets: [{
+          label: 'Data Points',
+          data: dataPoints.map(point => ({ x: point.x, y: point.y })),
+          backgroundColor: 'rgba(75, 192, 192, 1)',
+          pointRadius: 5
+        }]
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          tooltip: {
+            callbacks: {
+              label: context => {
+                return `Point (${context.raw.x}, ${context.raw.y})`;
+              }
             }
           }
+        },
+        onClick: (event) => {
+          const points = chart.getElementsAtEventForMode(event, 'nearest', { intersect: true }, false);
+          if (points.length) {
+            const pointIndex = points[0].index;
+            const clickedPoint = dataPoints[pointIndex];
+            displayImage(clickedPoint.imageUrl);
+          }
+        },
+        scales: {
+          x: { title: { display: true, text: 'X Axis' } },
+          y: { title: { display: true, text: 'Y Axis' } }
         }
-      },
-      onClick: (event) => {
-        const points = chart.getElementsAtEventForMode(event, 'nearest', { intersect: true }, false);
-        if (points.length) {
-          const pointIndex = points[0].index;
-          const clickedPoint = dataPoints[pointIndex];
-          displayImage(clickedPoint.imageUrl);
-        }
-      },
-      scales: {
-        x: { title: { display: true, text: 'X Axis' } },
-        y: { title: { display: true, text: 'Y Axis' } }
       }
-    }
-  });
+    });
 
-  // Function to display the clicked image
-  function displayImage(imageUrl) {
-    let imageDisplay = document.getElementById("image-display");
-    if (!imageDisplay) {
-      imageDisplay = document.createElement("img");
-      imageDisplay.id = "image-display";
-      imageDisplay.style.maxWidth = "80%";
-      imageDisplay.style.display = "block";
-      imageDisplay.style.margin = "20px auto";
-      document.body.appendChild(imageDisplay);
+    // Display the image below the graph
+    function displayImage(imageUrl) {
+      let imageDisplay = document.getElementById("image-display");
+      if (!imageDisplay) {
+        imageDisplay = document.createElement("img");
+        imageDisplay.id = "image-display";
+        imageDisplay.style.maxWidth = "80%";
+        imageDisplay.style.display = "block";
+        imageDisplay.style.margin = "20px auto";
+        document.body.appendChild(imageDisplay);
+      }
+      imageDisplay.src = imageUrl;
+      imageDisplay.alt = `Related Image`;
     }
-    imageDisplay.src = imageUrl;
-    imageDisplay.alt = `Related Image`;
   }
 </script>

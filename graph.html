@@ -22,21 +22,20 @@
 </html>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
 
 <script>
-  // Load CSV and plot the graph
-  fetch("data.csv")
+  fetch("feedback_data.csv")
     .then(response => response.text())
     .then(csvText => {
-      // Parse CSV using PapaParse
       const parsedData = Papa.parse(csvText, {
         header: true,
         skipEmptyLines: true
       });
 
-      // Extract points and plot the graph
       const dataPoints = parsedData.data.map(row => ({
-        x: parseFloat(row.x),
+        x: new Date(row.x),  // Parse full date-time
         y: parseFloat(row.y),
         imageUrl: `images/${row.imageUrl}`
       }));
@@ -52,7 +51,7 @@
       data: {
         datasets: [{
           label: 'Data Points',
-          data: dataPoints.map(point => ({ x: point.x, y: point.y })),
+          data: dataPoints,
           backgroundColor: 'rgba(75, 192, 192, 1)',
           pointRadius: 5
         }]
@@ -63,7 +62,8 @@
           tooltip: {
             callbacks: {
               label: context => {
-                return `Point (${context.raw.x}, ${context.raw.y})`;
+                const date = new Date(context.raw.x);
+                return `Date: ${date.toLocaleString()}, Value: ${context.raw.y}`;
               }
             }
           }
@@ -77,13 +77,23 @@
           }
         },
         scales: {
-          x: { title: { display: true, text: 'X Axis' } },
-          y: { title: { display: true, text: 'Y Axis' } }
+          x: {
+            type: 'time',
+            title: { display: true, text: 'Date and Time' },
+            time: {
+              unit: 'hour',
+              displayFormats: {
+                hour: 'MMM d, yyyy HH:mm'
+              }
+            }
+          },
+          y: {
+            title: { display: true, text: 'Y Axis' }
+          }
         }
       }
     });
 
-    // Display the image below the graph
     function displayImage(imageUrl) {
       let imageDisplay = document.getElementById("image-display");
       if (!imageDisplay) {

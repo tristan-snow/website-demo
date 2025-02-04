@@ -18,8 +18,10 @@
   <h1 style="text-align: center;">Data Graph</h1>
   <canvas id="myChart"></canvas>
 
-  <script>
-    // Sample data points and related images
+ </body>
+</html>
+
+<script>
     const dataPoints = [
   { x: 1, y: 5, imageUrl: "images/IMG_1039.JPEG" },
   { x: 2, y: 7, imageUrl: "images/IMG_1031.JPEG" },
@@ -27,7 +29,7 @@
   { x: 4, y: 9, imageUrl: "images/IMG_1033.JPEG" }
     ];
 
-    const ctx = document.getElementById('myChart').getContext('2d');
+  const ctx = document.getElementById('myChart').getContext('2d');
 
   const chart = new Chart(ctx, {
     type: 'scatter',
@@ -45,7 +47,6 @@
         tooltip: {
           callbacks: {
             label: context => {
-              const pointIndex = context.dataIndex;
               return `Point (${context.raw.x}, ${context.raw.y})`;
             }
           }
@@ -56,7 +57,7 @@
         if (points.length) {
           const pointIndex = points[0].index;
           const clickedPoint = dataPoints[pointIndex];
-          alert(`Image related to this point: ${clickedPoint.imageUrl}`);
+          displayImage(clickedPoint.imageUrl);
         }
       },
       scales: {
@@ -66,23 +67,18 @@
     }
   });
 
-  // Insert the image display logic here
-  const imageDisplay = document.createElement("img");
-  imageDisplay.style.maxWidth = "80%";
-  imageDisplay.style.display = "block";
-  imageDisplay.style.margin = "20px auto";
-  document.body.appendChild(imageDisplay);
-
-  chart.options.onClick = (event) => {
-    const points = chart.getElementsAtEventForMode(event, 'nearest', { intersect: true }, false);
-    if (points.length) {
-      const pointIndex = points[0].index;
-      const clickedPoint = dataPoints[pointIndex];
-      imageDisplay.src = clickedPoint.imageUrl;
-      imageDisplay.alt = `Image for data point (${clickedPoint.x}, ${clickedPoint.y})`;
+  // Function to display the clicked image
+  function displayImage(imageUrl) {
+    let imageDisplay = document.getElementById("image-display");
+    if (!imageDisplay) {
+      imageDisplay = document.createElement("img");
+      imageDisplay.id = "image-display";
+      imageDisplay.style.maxWidth = "80%";
+      imageDisplay.style.display = "block";
+      imageDisplay.style.margin = "20px auto";
+      document.body.appendChild(imageDisplay);
     }
-  };
+    imageDisplay.src = imageUrl;
+    imageDisplay.alt = `Related Image`;
+  }
 </script>
-
-</body>
-</html>
